@@ -22,6 +22,9 @@ class RunTests {
 			// add more jobs
 			for(i in 10...20) agenda.add(new MyJob(i));
 		});
+		
+		// stop after some time
+		haxe.Timer.delay(agenda.worker.stop, 2500);
 	}
 }
 
