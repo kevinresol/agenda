@@ -1,0 +1,4 @@
+-cp tests
+-main RunTests
+
+-D agenda_file # use a plain text file as data store
