@@ -6,8 +6,8 @@ import haxe.ds.Option;
 import haxe.Serializer;
 import haxe.Unserializer;
 import agenda.Job;
-import js.npm.mongoose.Mongoose;
 import agenda.db.adapter.MongooseAdapter.AttemptHelper.*;
+import js.npm.mongoose.Mongoose;
 using tink.CoreApi;
 
 @:build(futurize.Futurize.build())

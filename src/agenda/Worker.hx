@@ -48,7 +48,9 @@ class Worker {
 				timer = Timer.delay(next, interval);
 				
 			case Failure(err): 
-				trace(err.message);
+				trace('adapter error:' + err.message);
+				status = Idle;
+				timer = Timer.delay(next, interval);
 				
 		});
 	}
