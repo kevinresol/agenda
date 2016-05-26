@@ -60,7 +60,7 @@ class RetryWork implements Work {
 	
 	public function new(i:Int) {
 		this.i = i;
-		count == 0;
+		count = 0;
 	}
 	
 	public function work() {
