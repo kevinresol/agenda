@@ -33,7 +33,10 @@ class MongooseAdapter implements agenda.db.Adapter {
 	public function next():Surprise<Option<Job>, Error> {
 		return @:futurize manager.findOne({
 			schedule: {"$lte": Date.now()},
-			status: {"$in": [Pending, Error]}
+			"$or": untyped [
+				{status: Pending},
+				{status: Error, nextRetry: {"$lte": Date.now()}},
+			]
 		}, $cb) >>
 			function(job:AgendaJob) return job == null ? Success(None) : Success(Some(job.toJob(toAttempt)));
 	}
@@ -43,7 +46,8 @@ class MongooseAdapter implements agenda.db.Adapter {
 			_id: job.id,
 			attempts: job.attempts.map(toAttemptData),
 			schedule: job.schedule,
-			deleteAfterDone: job.deleteAfterDone,
+			nextRetry: job.nextRetry,
+			options: job.options,
 			work: Serializer.run(job.work),
 			status: job.status,
 			createDate: job.createDate,
@@ -66,7 +70,8 @@ typedef AgendaJobData = {
 	_id:String,
 	attempts:Array<AttemptData>,
 	schedule:Date,
-	deleteAfterDone:Bool,
+	nextRetry:Date,
+	options:JobOptions,
 	work:String,
 	status:JobStatus,
 	createDate:Date,
@@ -89,7 +94,8 @@ class AgendaJob extends js.npm.mongoose.macro.Model<AgendaJobData> {
 			id: id,
 			attempts: attempts.map(toAttempt),
 			schedule: schedule,
-			deleteAfterDone: deleteAfterDone,
+			nextRetry: nextRetry,
+			options: options,
 			work: Unserializer.run(work),
 			status: status,
 			createDate: createDate,

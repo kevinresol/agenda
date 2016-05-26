@@ -8,7 +8,8 @@ class Job {
 	public var id:String;
 	public var attempts:Array<Attempt>;
 	public var schedule:Date;
-	public var deleteAfterDone:Bool;
+	public var nextRetry:Date;
+	public var options:JobOptions;
 	public var work:Work;
 	public var status:JobStatus;
 	public var createDate:Date;
@@ -17,7 +18,8 @@ class Job {
 		id = info.id;
 		attempts = info.attempts;
 		schedule = info.schedule;
-		deleteAfterDone = info.deleteAfterDone;
+		nextRetry = info.nextRetry;
+		options = info.options;
 		work = info.work;
 		status = info.status;
 		createDate = info.createDate;
@@ -39,33 +41,26 @@ class Job {
 	}
 	
 	function fail(err:Error) {
-		status = Error;
+		if(attempts.length >= options.retryCount) 
+			status = Failed;
+		else {
+			status = Error;
+			nextRetry = Date.now().delta(options.retryIntervalMS);
+		}
 		attempts.push(new Attempt(Failure(err)));
 	}
 	
-	public static function immediate(work:Work, ?options:JobOptions) {
-		var info = defaultInfo(work, options);
-		return new Job(info);
-	}
-	
-	public static function at(date:Date, work:Work, ?options:JobOptions) {
-		var info = defaultInfo(work, options);
-		info.schedule = date;
-		return new Job(info);
-	}
-	
-	public static function delay(delayMS:Int, work:Work, ?options:JobOptions) {
-		var info = defaultInfo(work, options);
-		info.schedule = Date.now().delta(delayMS);
-		return new Job(info);
-	}
-	
 	static function defaultInfo(work:Work, options:JobOptions):JobInfo {
+		if(options == null) options = {};
+		if(options.deleteAfterDone == null) options.deleteAfterDone = true;
+		if(options.retryCount == null) options.retryCount = 3;
+		if(options.retryIntervalMS == null) options.retryIntervalMS = 5 * 60 * 1000;
 		return {
 			id: uuid(),
 			attempts: [],
 			schedule: Date.now(),
-			deleteAfterDone: options != null && options.deleteAfterDone != null ? options.deleteAfterDone : true,
+			nextRetry: null,
+			options: options,
 			work: work,
 			status: Pending,
 			createDate: Date.now(),
@@ -111,13 +106,16 @@ class Attempt {
 
 typedef JobOptions = {
 	?deleteAfterDone:Bool,
+	?retryCount:Int,
+	?retryIntervalMS:Int,
 }
 
 typedef JobInfo = {
 	id:String,
 	attempts:Array<Attempt>,
 	schedule:Date,
-	deleteAfterDone:Bool,
+	nextRetry:Date,
+	options:JobOptions,
 	work:Work,
 	status:JobStatus,
 	createDate:Date,

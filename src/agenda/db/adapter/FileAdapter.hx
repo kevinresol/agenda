@@ -50,8 +50,8 @@ class FileAdapter implements agenda.db.Adapter {
 		for(job in jobs)
 		if(now > job.schedule.getTime()) {
 			switch job.status {
-				case Pending:
-				case Error: // TODO: check retry interval
+				case Pending: // good, this is the one we are finding
+				case Error if(now > job.nextRetry.getTime()): // good, this is the one we are finding
 				default: continue;
 			}
 			job.status = Working;
