@@ -1,6 +1,13 @@
 {
   "name": "agenda",
+  "url": "https://github.com/kevinresol/agenda",
+  "license": "MIT",
   "classPath": "src",
+  "description": "Job scheduler",
+  "releasenote": "Experimental release",
+  "version": "0.1.0",
+  "tags": ["agenda", "schedule", "job", "task"],
+  "contributors": ["kevinresol"],
   "dependencies": {
     "tink_core": ""
   }
