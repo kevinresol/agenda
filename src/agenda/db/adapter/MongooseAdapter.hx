@@ -25,9 +25,13 @@ class MongooseAdapter implements agenda.db.Adapter {
 			function(_) return Success(Noise);
 	}
 	
+	public function remove(job:Job):Surprise<Noise, Error> {
+		return @:futurize manager.remove({_id: job.id}, $cb0);
+	}
+	
 	public function update(job:Job):Surprise<Noise, Error> {
 		return @:futurize manager.update({_id: job.id}, toJobData(job), $cb) >>
-			function(result) return result.ok == 1 ? Success(Noise) : Failure(tink.core.Error.withData('Mongoose update error', result));
+			function(_) return Success(Noise);
 	}
 	
 	public function next():Surprise<Option<Job>, Error> {

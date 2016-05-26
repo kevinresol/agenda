@@ -33,7 +33,10 @@ class Worker {
 		adapter.next().handle(function(o) switch(o) {
 			case Success(Some(job)): 
 				var future = job.run() >>
-					function(_) return adapter.update(job);
+					function(_) return switch job.status {
+						case Done if(job.options.deleteAfterDone): adapter.remove(job);
+						default: adapter.update(job);
+					}
 				future.handle(function(o) switch o {
 					case Success(_): if(status != Stopped) next();
 					case Failure(err): trace("Adapter update error:" + err); // TODO
