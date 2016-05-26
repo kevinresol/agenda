@@ -35,13 +35,13 @@ class MongooseAdapter implements agenda.db.Adapter {
 	}
 	
 	public function next():Surprise<Option<Job>, Error> {
-		return @:futurize manager.findOne({
+		return @:futurize manager.findOneAndUpdate({
 			schedule: {"$lte": Date.now()},
 			"$or": untyped [
 				{status: Pending},
 				{status: Error, nextRetry: {"$lte": Date.now()}},
 			]
-		}, $cb) >>
+		}, {status: Working}, {"new": true}, $cb) >>
 			function(job:AgendaJob) return job == null ? Success(None) : Success(Some(job.toJob(toAttempt)));
 	}
 	
