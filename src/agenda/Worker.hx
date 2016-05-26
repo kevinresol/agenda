@@ -34,7 +34,7 @@ class Worker {
 			case Success(Some(job)): 
 				var future = job.run() >>
 					function(_) return switch job.status {
-						case Done if(job.options.deleteAfterDone): adapter.remove(job);
+						case Done if(job.options.deleteAfterDone): adapter.remove(job.id);
 						default: adapter.update(job);
 					}
 				future.handle(function(o) switch o {

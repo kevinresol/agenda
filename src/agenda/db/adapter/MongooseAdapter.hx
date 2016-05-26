@@ -26,8 +26,8 @@ class MongooseAdapter implements agenda.db.Adapter {
 			function(_) return Success(Noise);
 	}
 	
-	public function remove(job:Job):Surprise<Noise, Error> {
-		return @:futurize manager.remove({_id: job.id}, $cb0);
+	public function remove(id:String):Surprise<Noise, Error> {
+		return @:futurize manager.remove({_id: id}, $cb0);
 	}
 	
 	public function update(job:Job):Surprise<Noise, Error> {

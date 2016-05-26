@@ -17,8 +17,8 @@ class FileAdapter implements agenda.db.Adapter {
 		return isolate(_add.bind(job));
 	}
 	
-	public function remove(job:Job):Surprise<Noise, Error> {
-		return isolate(_remove.bind(job));
+	public function remove(id:String):Surprise<Noise, Error> {
+		return isolate(_remove.bind(id));
 	}
 	
 	public function update(job:Job):Surprise<Noise, Error> {
@@ -36,10 +36,10 @@ class FileAdapter implements agenda.db.Adapter {
 		return Future.sync(Success(Noise));
 	}
 	
-	function _remove(job:Job):Surprise<Noise, Error> {
+	function _remove(id:String):Surprise<Noise, Error> {
 		var jobs = read();
 		for(i in 0...jobs.length) {
-			if(jobs[i].id == job.id) {
+			if(jobs[i].id == id) {
 				jobs.splice(i, 1);
 				write(jobs);
 				break;
