@@ -52,7 +52,7 @@ class Job {
 	
 	static function defaultInfo(work:Work, options:JobOptions):JobInfo {
 		if(options == null) options = {};
-		if(options.deleteAfterDone == null) options.deleteAfterDone = true;
+		if(options.deleteAfterDone == null) options.deleteAfterDone = false;
 		if(options.retryCount == null) options.retryCount = 3;
 		if(options.retryIntervalMS == null) options.retryIntervalMS = 5 * 60 * 1000;
 		return {
