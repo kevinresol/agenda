@@ -1,7 +1,7 @@
 package agenda;
 
 import agenda.db.Adapter;
-import agenda.db.Item;
+import agenda.Job;
 import haxe.Timer;
 
 using tink.CoreApi;
@@ -31,8 +31,13 @@ class Worker {
 	function next() {
 		status = Working;
 		adapter.next().handle(function(o) switch(o) {
-			case Success(Some(item)): 
-				run(item).handle(function(_) if(status != Stopped) next());
+			case Success(Some(job)): 
+				var future = job.run() >>
+					function(_) return adapter.update(job);
+				future.handle(function(o) switch o {
+					case Success(_): if(status != Stopped) next();
+					case Failure(err): trace("Adapter update error:" + err); // TODO
+				});
 			
 			case Success(None): 
 				trace('idle');
@@ -43,17 +48,6 @@ class Worker {
 				trace(err.message);
 				
 		});
-	}
-	
-	function run(item:Item) {
-		return item.job.run() >>
-			function(o) {
-				switch o {
-					case Success(_): item.done();
-					case Failure(err): item.fail(err);
-				}
-				return adapter.update(item);
-			}
 	}
 }
 

@@ -3,4 +3,4 @@
 -js bin/test.js
 -lib hxnodejs
 -lib agenda
--D agenda_file
+-lib filelock

@@ -5,39 +5,48 @@ import sys.FileSystem;
 import haxe.crypto.Sha1;
 import agenda.Job;
 import agenda.Agenda;
-import agenda.db.Adapter;
+import agenda.db.adapter.*;
 
 using tink.CoreApi;
 
 class RunTests {
 	static function main() {
-		var agenda = new Agenda(new FileAdapter('agenda.txt'));
+		var adapter =
+			#if filelock
+				new FileAdapter('agenda.txt');
+			#elseif (js_kit && futurize)
+				new MongooseAdapter('mongodb://localhost:27017/test_agenda');
+			#end
+			
+		var agenda = new Agenda(adapter);
 		
 		// add some jobs
-		Future.ofMany([for(i in 0...10) agenda.add(new MyJob(i))]).handle(function(_) {
+		Future.ofMany([for(i in 0...10) agenda.add(Job.immediate(new MyWork(i)))]).handle(function(_) {
 			
 			// start the worker
 			agenda.worker.start();
 			
 			// add more jobs
-			for(i in 10...20) agenda.add(new MyJob(i));
+			for(i in 10...20) agenda.add(Job.immediate(new MyWork(i)));
 		});
 		
 		// stop after some time
-		haxe.Timer.delay(agenda.worker.stop, 2500);
+		haxe.Timer.delay(function() {
+			agenda.worker.stop();
+			Sys.exit(0);
+		}, 2500);
 	}
 }
 
-class MyJob extends Job {
+class MyWork implements Work {
 	
 	var i:Int;
 	
 	public function new(i:Int) {
-		super();
 		this.i = i;
 	}
 	
-	override function run() {
+	public function work() {
 		var filename = '$i.txt';
 		File.saveContent(filename, Date.now().toString());
 		return Future.sync(Success(Noise));

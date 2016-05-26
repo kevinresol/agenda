@@ -2,7 +2,6 @@
   "name": "agenda",
   "classPath": "src",
   "dependencies": {
-    "tink_core": "",
-    "filelock": ""
+    "tink_core": ""
   }
 }
