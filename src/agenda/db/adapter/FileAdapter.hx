@@ -30,50 +30,62 @@ class FileAdapter implements agenda.db.Adapter {
 	}
 	
 	function _add(job:Job):Surprise<Noise, Error> {
-		var jobs = read();
-		jobs.push(job);
-		write(jobs);
-		return Future.sync(Success(Noise));
+		switch read() {
+			case Success(jobs):
+				jobs.push(job);
+				write(jobs);
+				return Future.sync(Success(Noise));
+			case Failure(err): return Future.sync(Failure(err));
+		}
 	}
 	
 	function _remove(id:String):Surprise<Noise, Error> {
-		var jobs = read();
-		for(i in 0...jobs.length) {
-			if(jobs[i].id == id) {
-				jobs.splice(i, 1);
-				write(jobs);
-				break;
-			}
+		switch read() {
+			case Success(jobs):
+				for(i in 0...jobs.length) {
+					if(jobs[i].id == id) {
+						jobs.splice(i, 1);
+						write(jobs);
+						break;
+					}
+				}
+				return Future.sync(Success(Noise));
+			case Failure(err): return Future.sync(Failure(err));
 		}
-		return Future.sync(Success(Noise));
 	}
 	
 	function _update(job:Job):Surprise<Noise, Error> {
-		var jobs = read();
-		for(i in 0...jobs.length) {
-			if(jobs[i].id == job.id) {
-				jobs[i] = job;
-				write(jobs);
-				break;
-			}
+		switch read() {
+			case Success(jobs):
+				for(i in 0...jobs.length) {
+					if(jobs[i].id == job.id) {
+						jobs[i] = job;
+						write(jobs);
+						break;
+					}
+				}
+				return Future.sync(Success(Noise));
+			case Failure(err): return Future.sync(Failure(err));
 		}
-		return Future.sync(Success(Noise));
 	}
 	
 	function _next():Surprise<Option<Job>, Error> {
 		var now = Date.now().getTime();
-		var jobs = read();
-		for(job in jobs)
-		if(now > job.schedule.getTime()) {
-			switch job.status {
-				case Pending: // good, this is the one we are finding
-				case Error if(now > job.nextRetry.getTime()): // good, this is the one we are finding
-				default: continue;
-			}
-			job.status = Working;
-			return _update(job) >> function(_) return Some(job);
+		switch read() {
+			case Success(jobs):
+				for(job in jobs)
+				if(now > job.schedule.getTime()) {
+					switch job.status {
+						case Pending: // good, this is the one we are finding
+						case Errored if(now > job.nextRetry.getTime()): // good, this is the one we are finding
+						default: continue;
+					}
+					job.status = Working;
+					return _update(job) >> function(_) return Some(job);
+				}
+				return Future.sync(Success(None));
+			case Failure(err): return Future.sync(Failure(err));
 		}
-		return Future.sync(Success(None));
 	}
 	
 	function isolate<T>(f:Void->Surprise<T, Error>):Surprise<T, Error> {
@@ -90,9 +102,12 @@ class FileAdapter implements agenda.db.Adapter {
 		});
 	}
 	
-	function read():Array<Job> {
+	function read():Outcome<Array<Job>, Error> {
 		var data = sys.io.File.getContent(path);
-		return try haxe.Unserializer.run(data) catch(e:Dynamic) [];
+		return try
+			Success(haxe.Unserializer.run(data))
+		catch(e:Dynamic)
+			Failure(Error.withData('Error during unserializing', e));
 	}
 	
 	function write(jobs:Array<Job>) {

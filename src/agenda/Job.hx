@@ -44,7 +44,7 @@ class Job {
 		if(attempts.length >= options.retryCount) 
 			status = Failed;
 		else {
-			status = Error;
+			status = Errored;
 			nextRetry = Date.now().delta(options.retryIntervalMS);
 		}
 		attempts.push(new Attempt(Failure(err)));
@@ -129,7 +129,7 @@ interface Work {
 abstract JobStatus(String) to String {
 	var Pending = 'pending';
 	var Working = 'working';
-	var Error = 'error';
+	var Errored = 'errored';
 	var Failed = 'failed';
 	var Done = 'done';
 }
