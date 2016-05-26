@@ -7,6 +7,7 @@ import haxe.Serializer;
 import haxe.Unserializer;
 import agenda.Job;
 import js.npm.mongoose.Mongoose;
+import agenda.db.adapter.MongooseAdapter.AttemptHelper.*;
 using tink.CoreApi;
 
 @:build(futurize.Futurize.build())
@@ -42,7 +43,7 @@ class MongooseAdapter implements agenda.db.Adapter {
 				{status: Error, nextRetry: {"$lte": Date.now()}},
 			]
 		}, {status: Working}, {"new": true}, $cb) >>
-			function(job:AgendaJob) return job == null ? Success(None) : Success(Some(job.toJob(toAttempt)));
+			function(job:AgendaJob) return job == null ? Success(None) : Success(Some(job.toJob()));
 	}
 	
 	function toJobData(job:Job):AgendaJobData {
@@ -57,15 +58,17 @@ class MongooseAdapter implements agenda.db.Adapter {
 			createDate: job.createDate,
 		}
 	}
-	
-	function toAttemptData(attempt:Attempt):AttemptData {
+}
+
+class AttemptHelper {
+	public static function toAttemptData(attempt:Attempt):AttemptData {
 		return {
 			outcome: Serializer.run(attempt.outcome),
 			date: attempt.date,
 		}
 	}
 	
-	function toAttempt(data:AttemptData):Attempt {
+	public static function toAttempt(data:AttemptData):Attempt {
 		return new Attempt(Unserializer.run(data.outcome), data.date);
 	}
 }
@@ -93,7 +96,7 @@ class AgendaJobManager extends js.npm.mongoose.macro.Manager<AgendaJobData, Agen
 	typeKey: '__type__',
 })
 class AgendaJob extends js.npm.mongoose.macro.Model<AgendaJobData> {
-	public function toJob(toAttempt):Job {
+	public function toJob():Job {
 		return new Job({
 			id: id,
 			attempts: attempts.map(toAttempt),
