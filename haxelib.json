@@ -4,8 +4,8 @@
   "license": "MIT",
   "classPath": "src",
   "description": "Job scheduler",
-  "releasenote": "Experimental release",
-  "version": "0.1.0",
+  "releasenote": "Various enhancements",
+  "version": "0.2.0",
   "tags": ["agenda", "schedule", "job", "task"],
   "contributors": ["kevinresol"],
   "dependencies": {
