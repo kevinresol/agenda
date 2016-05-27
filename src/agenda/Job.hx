@@ -45,7 +45,7 @@ class Job {
 			status = Failed;
 		else {
 			status = Errored;
-			nextRetry = Date.now().delta(options.retryIntervalMS);
+			nextRetry = Date.now().delta(options.retryInterval);
 		}
 		attempts.push(new Attempt(Failure(err)));
 	}
@@ -54,7 +54,8 @@ class Job {
 		if(options == null) options = {};
 		if(options.deleteAfterDone == null) options.deleteAfterDone = false;
 		if(options.retryCount == null) options.retryCount = 3;
-		if(options.retryIntervalMS == null) options.retryIntervalMS = 5 * 60 * 1000;
+		if(options.retryInterval == null) options.retryInterval = 5 * 60 * 1000; // 5 minutes
+		if(options.stale == null) options.stale = 30 * 60 * 1000; // 30 minutes
 		return {
 			id: uuid(),
 			attempts: [],
@@ -105,9 +106,27 @@ class Attempt {
 }
 
 typedef JobOptions = {
-	?deleteAfterDone:Bool,
-	?retryCount:Int,
-	?retryIntervalMS:Int,
+	
+	/**
+		Delete the job from database after done
+	**/
+	@:optional var deleteAfterDone:Bool;
+	
+	/**
+		Number of retry when a job is finished with error
+	**/
+	@:optional var retryCount:Int;
+	
+	/**
+		Number of milliseconds to wait before trying a errored job
+	**/
+	@:optional var retryInterval:Int;
+	
+	/**
+		Number of milliseconds for a job to be considered as stale
+		(i.e. a job has been working for too long, it may has crashed without reporting an error properly)
+	**/
+	@:optional var stale:Int;
 }
 
 typedef JobInfo = {
@@ -119,10 +138,6 @@ typedef JobInfo = {
 	work:Work,
 	status:JobStatus,
 	createDate:Date,
-}
-
-interface Work {
-	function work():Surprise<Noise, Error>;
 }
 
 @:enum

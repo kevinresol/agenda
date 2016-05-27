@@ -3,7 +3,9 @@ package agenda.db.adapter;
 #if filelock
 import agenda.Job;
 import haxe.ds.Option;
+
 using tink.CoreApi;
+using DateTools;
 
 class FileAdapter implements agenda.db.Adapter {
 	
@@ -70,17 +72,19 @@ class FileAdapter implements agenda.db.Adapter {
 	}
 	
 	function _next():Surprise<Option<Job>, Error> {
-		var now = Date.now().getTime();
+		var now = Date.now();
+		var nowTime = now.getTime();
 		switch read() {
 			case Success(jobs):
 				for(job in jobs)
-				if(now > job.schedule.getTime()) {
+				if(nowTime > job.schedule.getTime()) {
 					switch job.status {
 						case Pending: // good, this is the one we are finding
-						case Errored if(now > job.nextRetry.getTime()): // good, this is the one we are finding
+						case Errored | Working if(nowTime > job.nextRetry.getTime()): // good, this is the one we are finding
 						default: continue;
 					}
 					job.status = Working;
+					job.nextRetry = now.delta(job.options.stale);
 					return _update(job) >> function(_) return Some(job);
 				}
 				return Future.sync(Success(None));
@@ -103,11 +107,13 @@ class FileAdapter implements agenda.db.Adapter {
 	}
 	
 	function read():Outcome<Array<Job>, Error> {
+		if(!sys.FileSystem.exists(path)) return Success([]);
 		var data = sys.io.File.getContent(path);
 		return try
 			Success(haxe.Unserializer.run(data))
-		catch(e:Dynamic)
+		catch(e:Dynamic) {
 			Failure(Error.withData('Error during unserializing', e));
+		}
 	}
 	
 	function write(jobs:Array<Job>) {

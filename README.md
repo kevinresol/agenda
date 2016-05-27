@@ -47,4 +47,3 @@ More: see tests folder.
 ### TODO
 
 - Recursive jobs (e.g. run at :05 of every hour)
-- Check stale jobs (e.g. works that crashed)

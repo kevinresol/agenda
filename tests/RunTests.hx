@@ -3,8 +3,7 @@ package;
 import sys.io.File;
 import sys.FileSystem;
 import haxe.crypto.Sha1;
-import agenda.Job;
-import agenda.Agenda;
+import agenda.*;
 import agenda.db.adapter.*;
 
 using tink.CoreApi;
@@ -27,7 +26,7 @@ class RunTests {
 			agenda.worker.start();
 			
 			// add more jobs
-			for(i in 10...20) agenda.immediate(new RetryWork(i), {retryIntervalMS: 3000});
+			for(i in 10...20) agenda.immediate(new RetryWork(i), {retryInterval: 3000});
 		});
 		
 		// stop after some time

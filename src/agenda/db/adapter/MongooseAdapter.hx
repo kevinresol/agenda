@@ -9,6 +9,7 @@ import agenda.Job;
 import agenda.db.adapter.MongooseAdapter.AttemptHelper.*;
 import js.npm.mongoose.Mongoose;
 using tink.CoreApi;
+using DateTools;
 
 @:build(futurize.Futurize.build())
 class MongooseAdapter implements agenda.db.Adapter {
@@ -36,14 +37,25 @@ class MongooseAdapter implements agenda.db.Adapter {
 	}
 	
 	public function next():Surprise<Option<Job>, Error> {
+		var now = Date.now();
 		return @:futurize manager.findOneAndUpdate({
 			schedule: {"$lte": Date.now()},
 			"$or": untyped [
 				{status: Pending},
-				{status: Errored, nextRetry: {"$lte": Date.now()}},
+				{status: {"$in":[Errored, Working]}, nextRetry: {"$lte": now}},
 			]
-		}, {status: Working}, {"new": true}, $cb) >>
-			function(job:AgendaJob) return job == null ? Success(None) : Success(Some(job.toJob()));
+		}, {
+			status: Working,
+			nextRetry: now.delta(20000), // HACK: prevent others picking up this job, give us some time to update the nextRetry field later below
+		}, {"new": true}, $cb) >>
+			function(job:AgendaJob)
+				return if(job == null)
+					Future.sync(Success(None))
+				else {
+					job.nextRetry = now.delta(job.options.stale);
+					@:futurize job.save($cb) >>
+						function(_) return Success(Some(job.toJob()));
+				}
 	}
 	
 	function toJobData(job:Job):AgendaJobData {
