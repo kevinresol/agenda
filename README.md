@@ -6,7 +6,7 @@ Job scheduler
 
 ```haxe
 static function main() {
-	// database adapter, used to persist job data
+	// database adapter, for persisting job data
 	// find more adapters in agenda/db/adapters folder
 	// or implement your own adapter, see agenda.db.Adapter
 	var adapter = new FileAdapter('agenda.txt'); // require `-lib filelock`
