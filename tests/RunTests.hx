@@ -18,12 +18,13 @@ class RunTests {
 			#end
 			
 		var agenda = new Agenda(adapter);
+		var worker = agenda.createWorker();
 		
 		// add some jobs
 		Future.ofMany([for(i in 0...10) agenda.immediate(new MyWork(i))]).handle(function(_) {
 			
 			// start the worker
-			agenda.worker.start();
+			worker.start();
 			
 			// add more jobs
 			for(i in 10...20) agenda.immediate(new RetryWork(i), {retryInterval: 3000});
@@ -31,7 +32,7 @@ class RunTests {
 		
 		// stop after some time
 		haxe.Timer.delay(function() {
-			agenda.worker.stop();
+			worker.stop();
 			Sys.exit(0);
 		}, 12000);
 	}

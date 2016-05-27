@@ -14,14 +14,20 @@ static function main() {
 	// the Agenda instance
 	var agenda = new Agenda(adapter);
 	
-	// start the default worker
+	// create a worker
 	// a worker will check the database periodically, and run all the executable jobs one by one
-	// you can also create more workers with `new Worker(adapter)` and let them run jobs in parallel
-	agenda.worker.start();
+	// you can also create more workers with `agenda.createWorker()` and let them run jobs in parallel
+	var worker = agenda.createWorker();
+	
+	// start the worker
+	worker.start();
 	
 	// add some jobs
 	// note: adding jobs are async
 	for(i in 0...10) agenda.immediate(new MyWork(i));
+	
+	// stop the worker after some time
+	haxe.Timer.delay(function() worker.stop(), 10000);
 }
 
 class MyWork implements Work {

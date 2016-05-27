@@ -7,6 +7,7 @@ import haxe.Timer;
 using DateTools;
 using tink.CoreApi;
 
+@:allow(agenda)
 class Worker {
 	
 	var adapter:Adapter;
@@ -14,7 +15,7 @@ class Worker {
 	var interval:Int;
 	var status:WorkerStatus;
 	
-	public function new(adapter, interval = 1000) {
+	function new(adapter, interval = 1000) {
 		this.adapter = adapter;
 		this.interval = interval;
 		status = Stopped;
