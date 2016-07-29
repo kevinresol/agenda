@@ -12,8 +12,8 @@ class Agenda {
 		this.adapter = adapter;
 	}
 	
-	public function createWorker():Worker {
-		return new Worker(adapter);
+	public function createWorker(?interval:Int):Worker {
+		return new Worker(adapter, interval);
 	}
 	
 	/**

@@ -15,9 +15,9 @@ class Worker {
 	var interval:Int;
 	var status:WorkerStatus;
 	
-	function new(adapter, interval = 1000) {
+	function new(adapter, ?interval:Int) {
 		this.adapter = adapter;
-		this.interval = interval;
+		this.interval = interval == null ? 1000 : interval;
 		status = Stopped;
 	}
 	

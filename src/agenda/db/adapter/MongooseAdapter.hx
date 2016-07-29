@@ -47,7 +47,7 @@ class MongooseAdapter implements agenda.db.Adapter {
 		}, {
 			status: Working,
 			nextRetry: now.delta(20000), // HACK: prevent others picking up this job, give us some time to update the nextRetry field later below
-		}, {"new": true}, $cb) >>
+		}, {"new": true, sort: {'options.priority': -1}}, $cb) >>
 			function(job:AgendaJob)
 				return if(job == null)
 					Future.sync(Success(None))

@@ -55,6 +55,7 @@ class Job {
 		if(options.deleteAfterDone == null) options.deleteAfterDone = false;
 		if(options.retryCount == null) options.retryCount = 3;
 		if(options.retryInterval == null) options.retryInterval = 5 * 60 * 1000; // 5 minutes
+		if(options.priority == null) options.priority = 100; // 5 minutes
 		if(options.stale == null) options.stale = 30 * 60 * 1000; // 30 minutes
 		return {
 			id: uuid(),
@@ -127,6 +128,13 @@ typedef JobOptions = {
 		(i.e. a job has been working for too long, it may has crashed without reporting an error properly)
 	**/
 	@:optional var stale:Int;
+	
+	/**
+		Priority of this job:
+		Jobs with higher priority should run first
+		default is 100
+	**/
+	@:optional var priority:Int;
 }
 
 typedef JobInfo = {

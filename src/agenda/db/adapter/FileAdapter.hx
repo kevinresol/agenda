@@ -76,18 +76,25 @@ class FileAdapter implements agenda.db.Adapter {
 		var nowTime = now.getTime();
 		switch read() {
 			case Success(jobs):
-				for(job in jobs)
-				if(nowTime > job.schedule.getTime()) {
-					switch job.status {
-						case Pending: // good, this is the one we are finding
-						case Errored | Working if(nowTime > job.nextRetry.getTime()): // good, this is the one we are finding
-						default: continue;
-					}
-					job.status = Working;
-					job.nextRetry = now.delta(job.options.stale);
-					return _update(job) >> function(_) return Some(job);
+				function filter(job:Job)
+					return 
+						nowTime > job.schedule.getTime() && 
+						switch job.status {
+							case Pending: true;
+							case Errored | Working if(nowTime > job.nextRetry.getTime()): true;
+							default: false;
+						}
+						
+				return switch jobs.filter(filter) {
+					case []:
+						Future.sync(Success(None));
+					case jobs:
+						jobs.sort(function(j1, j2) return j1.options.priority - j2.options.priority);
+						var job = jobs[0];
+						job.status = Working;
+						job.nextRetry = now.delta(job.options.stale);
+						return _update(job) >> function(_) return Some(job);
 				}
-				return Future.sync(Success(None));
 			case Failure(err): return Future.sync(Failure(err));
 		}
 	}
