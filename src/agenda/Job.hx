@@ -47,6 +47,7 @@ class Job {
 			status = Errored;
 			nextRetry = Date.now().delta(options.retryInterval);
 		}
+		if(Std.is(err, Error)) err = Error.withData('Error', err);
 		attempts.push(new Attempt(Failure(err)));
 	}
 	
