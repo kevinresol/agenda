@@ -38,4 +38,9 @@ interface Adapter {
 		That would prevent multiple workers to fetch and execute the same job.
 	**/
 	function next():Surprise<Option<Job>, Error>;
+	
+	/**
+		Clear all jobs.
+	**/
+	function clear():Surprise<Noise, Error>;
 }

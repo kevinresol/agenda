@@ -31,6 +31,10 @@ class FileAdapter implements agenda.db.Adapter {
 		return isolate(_next);
 	}
 	
+	public function clear():Surprise<Noise, Error> {
+		return isolate(_clear);
+	}
+	
 	function _add(job:Job):Surprise<Noise, Error> {
 		switch read() {
 			case Success(jobs):
@@ -97,6 +101,11 @@ class FileAdapter implements agenda.db.Adapter {
 				}
 			case Failure(err): return Future.sync(Failure(err));
 		}
+	}
+	
+	function _clear() {
+		write([]);
+		return Future.sync(Success(Noise));
 	}
 	
 	function isolate<T>(f:Void->Surprise<T, Error>):Surprise<T, Error> {

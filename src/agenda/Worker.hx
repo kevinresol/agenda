@@ -45,7 +45,7 @@ class Worker {
 				});
 			
 			case Success(None): 
-				trace('idle');
+				// trace('idle');
 				status = Idle;
 				timer = Timer.delay(next, interval);
 				

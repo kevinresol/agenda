@@ -40,4 +40,11 @@ class Agenda {
 		info.schedule = Date.now().delta(delayMS);
 		return adapter.add(new Job(info));
 	}
+	
+	/**
+		Clear all jobs. Use with care.
+	**/
+	public function clear() {
+		return adapter.clear();
+	}
 }
