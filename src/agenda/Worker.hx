@@ -14,6 +14,7 @@ class Worker {
 	var timer:Timer;
 	var interval:Int;
 	var status:WorkerStatus;
+	var stopped:SignalTrigger<Noise> = Signal.trigger();
 	
 	function new(adapter, ?interval:Int) {
 		this.adapter = adapter;
@@ -25,9 +26,12 @@ class Worker {
 		if(status == Stopped) next();
 	}
 	
-	public function stop() {
+	public function stop():Future<Noise> {
 		if(timer != null) timer.stop();
+		var result = (stopped:Signal<Noise>).next();
+		if(status != Working) stopped.trigger(Noise);
 		status = Stopped;
+		return result;
 	}
 	
 	function next() {
@@ -40,7 +44,7 @@ class Worker {
 						default: adapter.update(job);
 					}
 				future.handle(function(o) switch o {
-					case Success(_): if(status != Stopped) next();
+					case Success(_): if(status != Stopped) next() else stopped.trigger(Noise);
 					case Failure(err): trace("Adapter update error:" + err); // TODO
 				});
 			
