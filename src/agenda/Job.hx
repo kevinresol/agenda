@@ -51,7 +51,7 @@ class Job {
 		attempts.push(new Attempt(Failure(err)));
 	}
 	
-	static function defaultInfo(work:Work, options:JobOptions):JobInfo {
+	static function defaultInfo(work:Work, schedule:Date, options:JobOptions):JobInfo {
 		if(options == null) options = {};
 		if(options.deleteAfterDone == null) options.deleteAfterDone = false;
 		if(options.retryCount == null) options.retryCount = 3;
@@ -61,7 +61,7 @@ class Job {
 		return {
 			id: uuid(),
 			attempts: [],
-			schedule: Date.now(),
+			schedule: schedule,
 			nextRetry: null,
 			options: options,
 			work: work,

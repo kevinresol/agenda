@@ -2,7 +2,9 @@ package agenda;
 
 import agenda.Job;
 import agenda.db.Adapter;
+
 using DateTools;
+using tink.CoreApi;
 
 class Agenda {
 	
@@ -12,33 +14,35 @@ class Agenda {
 		this.adapter = adapter;
 	}
 	
-	public function createWorker(?interval:Int):Worker {
+	public inline function createWorker(?interval:Int):Worker {
 		return new Worker(adapter, interval);
 	}
 	
 	/**
 		Queue a job that should be executed as soon as possible.
 	**/
-	public function immediate(work:WorkGenerator, ?options:JobOptions) {
-		var info = Job.defaultInfo(work(), options);
-		return adapter.add(new Job(info));
+	public inline function immediate(work:WorkGenerator, ?options:JobOptions) {
+		return schedule(Date.now(), work, options);
 	}
 	
 	/**
 		Queue a job that should be executed at the scheduled date.
 	**/
 	public function schedule(date:Date, work:WorkGenerator, ?options:JobOptions) {
-		var info = Job.defaultInfo(work(), options);
-		info.schedule = date;
-		return adapter.add(new Job(info));
+		return Future.async(function(cb) {
+			var future = work() >>
+				function(work:Work) {
+					var info = Job.defaultInfo(work, date, options);
+					return adapter.add(new Job(info));
+				}
+			future.handle(cb);
+		});
 	}
 	/**
 		Queue a job that should be executed after some delay
 	**/
-	public function delay(delayMS:Int, work:WorkGenerator, ?options:JobOptions) {
-		var info = Job.defaultInfo(work(), options);
-		info.schedule = Date.now().delta(delayMS);
-		return adapter.add(new Job(info));
+	public inline function delay(delayMS:Int, work:WorkGenerator, ?options:JobOptions) {
+		return schedule(Date.now().delta(delayMS), work, options);
 	}
 	
 	/**
@@ -49,9 +53,12 @@ class Agenda {
 	}
 }
 
+private typedef WorkGen = Void->Surprise<Work, Error>;
+
 @:callable
-abstract WorkGenerator(Void->Work) from Void->Work to Void->Work {
+abstract WorkGenerator(WorkGen) from WorkGen to WorkGen {
 	@:from
-	public static inline function fromWork(work:Work):WorkGenerator
-		return function() return work;
+	public static inline function fromWork(work:Work):WorkGenerator {
+		return function() return Future.sync(Success(work));
+	}
 }
