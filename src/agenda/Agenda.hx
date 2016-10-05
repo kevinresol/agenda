@@ -14,14 +14,14 @@ class Agenda {
 		this.adapter = adapter;
 	}
 	
-	public function createWorker(?interval:Int):Worker {
+	public inline function createWorker(?interval:Int):Worker {
 		return new Worker(adapter, interval);
 	}
 	
 	/**
 		Queue a job that should be executed as soon as possible.
 	**/
-	public function immediate(work:WorkGenerator, ?options:JobOptions) {
+	public inline function immediate(work:WorkGenerator, ?options:JobOptions) {
 		return schedule(Date.now(), work, options);
 	}
 	
@@ -35,11 +35,11 @@ class Agenda {
 	/**
 		Queue a job that should be executed after some delay
 	**/
-	public function delay(delayMS:Int, work:WorkGenerator, ?options:JobOptions) {
+	public inline function delay(delayMS:Int, work:WorkGenerator, ?options:JobOptions) {
 		return schedule(Date.now().delta(delayMS), work, options);
 	}
 	
-	public inline function recurring(type:RecurType, work:WorkGenerator, ?options:JobOptions) {
+	public function recurring(type:RecurType, work:WorkGenerator, ?options:JobOptions) {
 		var date = switch type {
 			case DayOfMonth(day, time): U.nextDayOfMonth(day).delta(time * 1000);
 			case Interval(start, interval): start;
@@ -50,7 +50,7 @@ class Agenda {
 	/**
 		Clear all jobs. Use with care.
 	**/
-	public function clear() {
+	public inline function clear() {
 		return adapter.clear();
 	}
 }
