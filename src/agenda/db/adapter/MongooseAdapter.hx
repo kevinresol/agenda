@@ -81,11 +81,12 @@ class AttemptHelper {
 		return {
 			outcome: Serializer.run(attempt.outcome),
 			date: attempt.date,
+			schedule: attempt.schedule,
 		}
 	}
 	
 	public static function toAttempt(data:AttemptData):Attempt {
-		return new Attempt(Unserializer.run(data.outcome), data.date);
+		return new Attempt(Unserializer.run(data.outcome), data.schedule, data.date);
 	}
 }
 

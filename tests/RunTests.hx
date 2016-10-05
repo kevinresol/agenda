@@ -28,6 +28,8 @@ class RunTests {
 			
 			// add more jobs
 			for(i in 10...20) agenda.immediate(new RetryWork(i), {retryInterval: 3000});
+			
+			agenda.recurring(Interval(Date.now(), 2), new IncrementalWork());
 		});
 		
 		// stop after some time
@@ -66,6 +68,21 @@ class RetryWork implements Work {
 	public function work() {
 		if(count++ < 2) return Future.sync(Failure(new Error('count is $count')));
 		var filename = '$i.txt';
+		File.saveContent(filename, Date.now().toString());
+		return Future.sync(Success(Noise));
+	}
+	
+}
+class IncrementalWork implements Work {
+	
+	var i:Int;
+	
+	public function new() {
+		i = 0;
+	}
+	
+	public function work() {
+		var filename = 'i${i++}.txt';
 		File.saveContent(filename, Date.now().toString());
 		return Future.sync(Success(Noise));
 	}

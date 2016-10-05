@@ -1,5 +1,8 @@
 package agenda;
 
+import haxe.ds.Option;
+import agenda.util.U;
+
 using tink.CoreApi;
 using DateTools;
 
@@ -13,8 +16,11 @@ class Job {
 	public var work:Work;
 	public var status:JobStatus;
 	public var createDate:Date;
+	public var recurring:Option<RecurType>;
 	
 	function new(info:JobInfo) {
+		if(info.recurring != None) info.options.deleteAfterDone = false;
+		
 		id = info.id;
 		attempts = info.attempts;
 		schedule = info.schedule;
@@ -23,6 +29,7 @@ class Job {
 		work = info.work;
 		status = info.status;
 		createDate = info.createDate;
+		recurring = info.recurring;
 	}
 	
 	public function run():Future<Noise> {
@@ -35,9 +42,18 @@ class Job {
 		});
 	}
 	
+	public function updateRecurrence() {
+		switch recurring {
+			case None: return;
+			case Some(DayOfMonth(day, time)): schedule = U.nextDayOfMonth(day).delta(time * 1000);
+			case Some(Interval(_, interval)): schedule = schedule.delta(interval * 1000);
+		}
+		status = Pending;
+	}
+	
 	function done() {
 		status = Done;
-		attempts.push(new Attempt(Success(Noise)));
+		attempts.push(new Attempt(Success(Noise), schedule));
 	}
 	
 	function fail(err:Error) {
@@ -48,10 +64,10 @@ class Job {
 			nextRetry = Date.now().delta(options.retryInterval);
 		}
 		if(Std.is(err, Error)) err = Error.withData('Error', err);
-		attempts.push(new Attempt(Failure(err)));
+		attempts.push(new Attempt(Failure(err), schedule));
 	}
 	
-	static function defaultInfo(work:Work, options:JobOptions):JobInfo {
+	static function defaultInfo(schedule:Date, work:Work, recurring:Option<RecurType>, options:JobOptions):JobInfo {
 		if(options == null) options = {};
 		if(options.deleteAfterDone == null) options.deleteAfterDone = false;
 		if(options.retryCount == null) options.retryCount = 3;
@@ -61,12 +77,13 @@ class Job {
 		return {
 			id: uuid(),
 			attempts: [],
-			schedule: Date.now(),
+			schedule: schedule,
 			nextRetry: null,
 			options: options,
 			work: work,
 			status: Pending,
 			createDate: Date.now(),
+			recurring: recurring,
 		}
 	}
 	
@@ -100,9 +117,11 @@ class Attempt {
 	
 	public var outcome:Outcome<Noise, Error>;
 	public var date:Date;
+	public var schedule:Date; // identify which recurrence
 	
-	public function new(outcome, ?date) {
+	public function new(outcome, schedule, ?date) {
 		this.outcome = outcome;
+		this.schedule = schedule;
 		this.date = date == null ? Date.now() : date;
 	}
 }
@@ -147,6 +166,7 @@ typedef JobInfo = {
 	work:Work,
 	status:JobStatus,
 	createDate:Date,
+	recurring:Option<RecurType>,
 }
 
 @:enum
@@ -157,3 +177,9 @@ abstract JobStatus(String) to String {
 	var Failed = 'failed';
 	var Done = 'done';
 }
+
+enum RecurType {
+	DayOfMonth(day:Int, time:Int); // day: 1-3, time=seconds from 00:00
+	Interval(start:Date, interval:Int); // Interval in seconds
+}
+

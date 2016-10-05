@@ -49,7 +49,3 @@ class MyWork implements Work {
 ```
 
 More: see tests folder.
-
-### TODO
-
-- Recursive jobs (e.g. run at :05 of every hour)
