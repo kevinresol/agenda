@@ -72,6 +72,11 @@ class MongooseAdapter implements agenda.db.Adapter {
 			work: Serializer.run(job.work),
 			status: job.status,
 			createDate: job.createDate,
+			recurring: switch job.recurring {
+				case None: null;
+				case Some(DayOfMonth(day, time)): {type: 'DayOfMonth', day: day, time: time}
+				case Some(Interval(start, interval)): {type: 'Interval', start: start, interval: interval}
+			}
 		}
 	}
 }
@@ -99,11 +104,19 @@ typedef AgendaJobData = {
 	work:String,
 	status:JobStatus,
 	createDate:Date,
+	recurring:{
+		type:String,
+		?day:Int,
+		?time:Int,
+		?start:Date,
+		?interval:Int,
+	},
 }
 
 typedef AttemptData = {
 	outcome:String, // serialized
 	date:Date,
+	schedule:Date,
 }
 
 class AgendaJobManager extends js.npm.mongoose.macro.Manager<AgendaJobData, AgendaJob> {}
@@ -123,6 +136,12 @@ class AgendaJob extends js.npm.mongoose.macro.Model<AgendaJobData> {
 			work: Unserializer.run(work),
 			status: status,
 			createDate: createDate,
+			recurring: switch recurring {
+				case null: None;
+				case {type: 'DayOfMonth', day: day, time: time}: Some(DayOfMonth(day, time));
+				case {type: 'Interval', start: start, interval: interval}: Some(Interval(start, interval));
+				case _: None;
+			}
 		});
 	}
 }
